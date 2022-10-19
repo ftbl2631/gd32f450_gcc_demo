@@ -1,2 +1,3 @@
 # gd32f450_gcc_demo
 在linux环境下使用gcc编程、调试
+测试下是否可以正常push到github
