@@ -39,18 +39,31 @@ OF SUCH DAMAGE.
 #include "systick.h"
 #include <stdio.h>
 #include "main.h"
-#include "exmc_norflash.h"
-//#include "gd32f450z_eval.h"
+#include "gd32f450z_eval.h"
 
+/*!
+    \brief      toggle the led every 500ms
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void led_spark(void)
+{
+    static __IO uint32_t timingdelaylocal = 0U;
 
-#define BUFFER_SIZE               0x100
-#define WRITE_READ_ADDR           0xfff200
+    if(timingdelaylocal){
 
-nor_id_struct nor_id;
-uint32_t writereadstatus = 0;
-uint16_t writebuffer[BUFFER_SIZE];
-uint16_t readbuffer[BUFFER_SIZE];
-nor_status_struct status;
+        if(timingdelaylocal < 500U){
+            gd_eval_led_on(LED1);
+        }else{
+            gd_eval_led_off(LED1);
+        }
+
+        timingdelaylocal--;
+    }else{
+        timingdelaylocal = 1000U;
+    }
+}
 
 /*!
     \brief      main function
@@ -60,46 +73,10 @@ nor_status_struct status;
 */
 int main(void)
 {
-    uint32_t index;
 
+    gd_eval_led_init(LED1);
     systick_config();
 
-    exmc_norflash_init(EXMC_BANK0_NORSRAM_REGION1);
-    /* read nor flash id and printf */
-    nor_read_id(&nor_id);
-
-    nor_return_to_read_mode();
-
-    /* erase the nor flash block to be written data */
-    status = nor_eraseblock(WRITE_READ_ADDR);
-
-
-    /* fill writeBuffer with the specified value */
-    nor_fill_buffer(writebuffer, BUFFER_SIZE, 0x0006);
-
-    /* write data to nor flash, WRITE_READ_ADDR: the starting address of the write data */
-    status = nor_write_buffer(writebuffer, WRITE_READ_ADDR, BUFFER_SIZE);
-    if(NOR_SUCCESS == status) {
-        printf("\r\nwrite data to nor flash block successfully!");
-    } else {
-        printf("\r\nwrite data to nor flash block failure!");
-
-        /* failure, light on LED3 */
-        gd_eval_led_on(LED3);
-        while(1);
-    }
-
-    /* read data from nor flash, WRITE_READ_ADDR: the starting address of the read data*/
-    nor_readbuffer(readbuffer, WRITE_READ_ADDR, BUFFER_SIZE);
-
-    /* read and write data comparison for equality */
-    writereadstatus = 0;
-    for(index = 0x00; index < BUFFER_SIZE; index++) {
-        if(readbuffer[index] != writebuffer[index]) {
-            writereadstatus++;
-            break;
-        }
-    }
     while (1){
     }
 }
